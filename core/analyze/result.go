@@ -16,6 +16,7 @@ type ObjectDetail struct {
 type VariableDetail struct {
 	Name          string
 	Value         string
+	Values        []string
 	IsCustomType  bool
 	ConverterName string
 	IsArray       bool

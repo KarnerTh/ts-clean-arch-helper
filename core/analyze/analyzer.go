@@ -74,9 +74,12 @@ func variableDetailFromInterface(line string) VariableDetail {
 	nameIndex := regVariable.SubexpIndex("name")
 	typeIndex := regVariable.SubexpIndex("type")
 
+	value := sanitizeVariableValue(groups[typeIndex])
+	values := strings.Split(strings.ReplaceAll(value, " ", ""), "|")
 	return VariableDetail{
-		Name:  sanitizeVariableName(groups[nameIndex]),
-		Value: sanitizeVariableValue(groups[typeIndex]),
+		Name:   sanitizeVariableName(groups[nameIndex]),
+		Value:  value,
+		Values: values,
 	}
 }
 
