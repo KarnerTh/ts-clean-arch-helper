@@ -18,10 +18,10 @@ export interface ExampleInterfaceEntity {
 export class ExampleEntity {
   @PrimaryGeneratedColumn()
   id!: number;
-  
+
   @Column("date")
   exampleDate!: Date;
-  
+
   @Column("enum", { enum: EnumWithValuesEntity })
   enum1!: EnumWithValuesEntity;
 
@@ -40,4 +40,7 @@ export class ExampleEntity {
 
   @Column("datetime")
   updatedAt!: Date;
+
+  @Column("datetime", { nullable: true })
+  deletedAt!: Date | null;
 }`;
