@@ -3,7 +3,6 @@ package generation
 import (
 	"fmt"
 	"strings"
-	"unicode"
 
 	"github.com/KarnerTh/ts-clean-arch-helper/analyze"
 )
@@ -88,9 +87,30 @@ func getVariables(variables []analyze.VariableDetail, objectType analyze.ObjectT
 	return result
 }
 
+func getTsTypes() []string {
+	return []string{
+		"any",
+		"boolean",
+		"Date",
+		"never",
+		"null",
+		"number",
+		"string",
+		"undefined",
+		"unknown",
+	}
+}
+
 func isCustomType(value string) bool {
 	if len(value) == 0 {
 		return false
 	}
-	return unicode.IsUpper([]rune(value)[0]) && value != "Date"
+
+	for _, tsType := range getTsTypes() {
+		if tsType == value {
+			return false
+		}
+	}
+
+	return true
 }
