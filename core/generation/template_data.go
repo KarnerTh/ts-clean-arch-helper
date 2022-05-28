@@ -56,44 +56,50 @@ func getMethods(objectName string, suffix SuffixType) []ConverterTemplateMethodD
 
 func getVariables(variables []analyze.VariableDetail, objectType analyze.ObjectType, suffix SuffixType) []analyze.VariableDetail {
 	result := make([]analyze.VariableDetail, len(variables))
-	for index, variable := range variables {
-		value := []string{}
-		var converterName string
-		includesCustomType := false
-		includesArray := false
-
+	for i, variable := range variables {
 		if objectType == analyze.ObjectTypeEnum {
-			value = append(value, variable.Value)
+			result[i] = getEnumVariables(variable)
 		} else {
-			for i, v := range variable.Values {
-				if isCustomType(v) {
-					includesCustomType = true
-					value = append(value, fmt.Sprintf("%s%s", v, suffix))
-					if strings.Contains(value[i], "[]") {
-						includesArray = true
-						value[i] = strings.ReplaceAll(value[i], "[]", "") + "[]"
-					}
-				} else {
-					value = append(value, v)
-				}
-			}
+			result[i] = getInterfaceVariables(variable, suffix)
 		}
-
-		if includesCustomType {
-			converterName, _ = getConverterName(variable.Value, suffix)
-		}
-
-		detail := analyze.VariableDetail{
-			Name:          variable.Name,
-			Value:         strings.Join(value, " | "),
-			IsCustomType:  includesCustomType,
-			ConverterName: converterName,
-			IsArray:       includesArray,
-		}
-
-		result[index] = detail
 	}
 	return result
+}
+
+func getInterfaceVariables(variable analyze.VariableDetail, suffix SuffixType) analyze.VariableDetail {
+	value := []string{}
+	var converterName string
+	includesCustomType := false
+	includesArray := false
+
+	for i, v := range variable.Values {
+		if !isCustomType(v) {
+			value = append(value, v)
+			continue
+		}
+		includesCustomType = true
+		value = append(value, fmt.Sprintf("%s%s", v, suffix))
+		if strings.Contains(value[i], "[]") {
+			includesArray = true
+			value[i] = strings.ReplaceAll(value[i], "[]", "") + "[]"
+		}
+	}
+
+	if includesCustomType {
+		converterName, _ = getConverterName(variable.Value, suffix)
+	}
+
+	return analyze.VariableDetail{
+		Name:          variable.Name,
+		Value:         strings.Join(value, " | "),
+		IsCustomType:  includesCustomType,
+		ConverterName: converterName,
+		IsArray:       includesArray,
+	}
+}
+
+func getEnumVariables(v analyze.VariableDetail) analyze.VariableDetail {
+	return v
 }
 
 func getTsTypes() []string {
