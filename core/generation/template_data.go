@@ -57,29 +57,38 @@ func getMethods(objectName string, suffix SuffixType) []ConverterTemplateMethodD
 func getVariables(variables []analyze.VariableDetail, objectType analyze.ObjectType, suffix SuffixType) []analyze.VariableDetail {
 	result := make([]analyze.VariableDetail, len(variables))
 	for index, variable := range variables {
-		var value string
+		value := []string{}
 		var converterName string
+		includesCustomType := false
+		includesArray := false
 
 		if objectType == analyze.ObjectTypeEnum {
-			value = variable.Value
+			value = append(value, variable.Value)
 		} else {
-			if isCustomType(variable.Value) {
-				value = fmt.Sprintf("%s%s", variable.Value, suffix)
-				converterName, _ = getConverterName(variable.Value, suffix)
-				if strings.Contains(value, "[]") {
-					value = strings.ReplaceAll(value, "[]", "") + "[]"
+			for i, v := range variable.Values {
+				if isCustomType(v) {
+					includesCustomType = true
+					value = append(value, fmt.Sprintf("%s%s", v, suffix))
+					if strings.Contains(value[i], "[]") {
+						includesArray = true
+						value[i] = strings.ReplaceAll(value[i], "[]", "") + "[]"
+					}
+				} else {
+					value = append(value, v)
 				}
-			} else {
-				value = variable.Value
 			}
+		}
+
+		if includesCustomType {
+			converterName, _ = getConverterName(variable.Value, suffix)
 		}
 
 		detail := analyze.VariableDetail{
 			Name:          variable.Name,
-			Value:         value,
-			IsCustomType:  isCustomType(variable.Value),
+			Value:         strings.Join(value, " | "),
+			IsCustomType:  includesCustomType,
 			ConverterName: converterName,
-			IsArray:       strings.Contains(value, "[]"),
+			IsArray:       includesArray,
 		}
 
 		result[index] = detail
