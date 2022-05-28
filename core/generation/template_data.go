@@ -106,13 +106,17 @@ func getTsTypes() []string {
 	return []string{
 		"any",
 		"boolean",
+		"Boolean",
 		"Date",
 		"never",
 		"null",
 		"number",
+		"Number",
 		"string",
+		"String",
 		"undefined",
 		"unknown",
+		"void",
 	}
 }
 
