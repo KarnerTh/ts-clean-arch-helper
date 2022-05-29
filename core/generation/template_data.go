@@ -72,26 +72,23 @@ func getInterfaceVariables(variable analyze.VariableDetail, suffix SuffixType) a
 	includesCustomType := false
 	includesArray := false
 
-	for i, v := range variable.Values {
-		if !isCustomType(v) {
-			value = append(value, v)
+	for i, ty := range variable.Types {
+		if !isCustomType(ty) {
+			value = append(value, ty)
 			continue
 		}
 		includesCustomType = true
-		value = append(value, fmt.Sprintf("%s%s", v, suffix))
+		converterName, _ = getConverterName(ty, suffix)
+		value = append(value, fmt.Sprintf("%s%s", ty, suffix))
 		if strings.Contains(value[i], "[]") {
 			includesArray = true
 			value[i] = strings.ReplaceAll(value[i], "[]", "") + "[]"
 		}
 	}
 
-	if includesCustomType {
-		converterName, _ = getConverterName(variable.Value, suffix)
-	}
-
 	return analyze.VariableDetail{
 		Name:          variable.Name,
-		Value:         strings.Join(value, " | "),
+		Types:         variable.Types,
 		IsCustomType:  includesCustomType,
 		ConverterName: converterName,
 		IsArray:       includesArray,

@@ -72,14 +72,12 @@ func (a analyzer) Analyze(input string) ([]ObjectDetail, error) {
 func variableDetailFromInterface(line string) VariableDetail {
 	groups := regVariable.FindStringSubmatch(line)
 	nameIndex := regVariable.SubexpIndex("name")
-	typeIndex := regVariable.SubexpIndex("type")
+	tyIndex := regVariable.SubexpIndex("type")
 
-	value := sanitizeVariableValue(groups[typeIndex])
-	values := strings.Split(strings.ReplaceAll(value, " ", ""), "|")
+	tyStr := sanitizeVariableTypeStr(groups[tyIndex])
 	return VariableDetail{
-		Name:   sanitizeVariableName(groups[nameIndex]),
-		Value:  value,
-		Values: values,
+		Name:  sanitizeVariableName(groups[nameIndex]),
+		Types: parseTypes(tyStr),
 	}
 }
 
@@ -91,7 +89,7 @@ func variableDetailFromEnum(line string) *VariableDetail {
 
 		return &VariableDetail{
 			Name:  sanitizeVariableName(groups[nameIndex]),
-			Value: sanitizeEnumValue(groups[valueIndex]),
+			Value: sanitizeEnumValueStr(groups[valueIndex]),
 		}
 	} else if regEnumWithoutValue.MatchString(line) {
 		groups := regEnumWithoutValue.FindStringSubmatch(line)
@@ -112,16 +110,18 @@ func sanitizeVariableName(name string) string {
 	return name
 }
 
-func sanitizeVariableValue(value string) string {
-	value = strings.ReplaceAll(value, "Entity", "")
-	return value
+func sanitizeVariableTypeStr(tyStr string) string {
+	return strings.ReplaceAll(tyStr, "Entity", "")
 }
 
-func sanitizeEnumValue(name string) string {
-	name = strings.ReplaceAll(name, ",", "")
-	return name
+func sanitizeEnumValueStr(value string) string {
+	return strings.ReplaceAll(value, ",", "")
 }
 
 func sanitizeObjectName(object string) string {
 	return strings.ReplaceAll(object, "Entity", "")
+}
+
+func parseTypes(tyStr string) []string {
+	return strings.Split(strings.ReplaceAll(tyStr, " ", ""), "|")
 }
