@@ -3,7 +3,6 @@ package generation
 import (
 	"fmt"
 	"strings"
-	"unicode"
 
 	"github.com/KarnerTh/ts-clean-arch-helper/analyze"
 )
@@ -57,40 +56,77 @@ func getMethods(objectName string, suffix SuffixType) []ConverterTemplateMethodD
 
 func getVariables(variables []analyze.VariableDetail, objectType analyze.ObjectType, suffix SuffixType) []analyze.VariableDetail {
 	result := make([]analyze.VariableDetail, len(variables))
-	for index, variable := range variables {
-		var value string
-		var converterName string
-
+	for i, variable := range variables {
 		if objectType == analyze.ObjectTypeEnum {
-			value = variable.Value
+			result[i] = getEnumVariables(variable)
 		} else {
-			if isCustomType(variable.Value) {
-				value = fmt.Sprintf("%s%s", variable.Value, suffix)
-				converterName, _ = getConverterName(variable.Value, suffix)
-				if strings.Contains(value, "[]") {
-					value = strings.ReplaceAll(value, "[]", "") + "[]"
-				}
-			} else {
-				value = variable.Value
-			}
+			result[i] = getInterfaceVariables(variable, suffix)
 		}
-
-		detail := analyze.VariableDetail{
-			Name:          variable.Name,
-			Value:         value,
-			IsCustomType:  isCustomType(variable.Value),
-			ConverterName: converterName,
-			IsArray:       strings.Contains(value, "[]"),
-		}
-
-		result[index] = detail
 	}
 	return result
+}
+
+func getInterfaceVariables(variable analyze.VariableDetail, suffix SuffixType) analyze.VariableDetail {
+	value := []string{}
+	var converterName string
+	includesCustomType := false
+	includesArray := false
+
+	for i, ty := range variable.Types {
+		if !isCustomType(ty) {
+			value = append(value, ty)
+			continue
+		}
+		includesCustomType = true
+		converterName, _ = getConverterName(ty, suffix)
+		value = append(value, fmt.Sprintf("%s%s", ty, suffix))
+		if strings.Contains(value[i], "[]") {
+			includesArray = true
+			value[i] = strings.ReplaceAll(value[i], "[]", "") + "[]"
+		}
+	}
+
+	return analyze.VariableDetail{
+		Name:          variable.Name,
+		Types:         variable.Types,
+		IsCustomType:  includesCustomType,
+		ConverterName: converterName,
+		IsArray:       includesArray,
+	}
+}
+
+func getEnumVariables(v analyze.VariableDetail) analyze.VariableDetail {
+	return v
+}
+
+func getTsTypes() []string {
+	return []string{
+		"any",
+		"boolean",
+		"Boolean",
+		"Date",
+		"never",
+		"null",
+		"number",
+		"Number",
+		"string",
+		"String",
+		"undefined",
+		"unknown",
+		"void",
+	}
 }
 
 func isCustomType(value string) bool {
 	if len(value) == 0 {
 		return false
 	}
-	return unicode.IsUpper([]rune(value)[0]) && value != "Date"
+
+	for _, tsType := range getTsTypes() {
+		if tsType == value {
+			return false
+		}
+	}
+
+	return true
 }

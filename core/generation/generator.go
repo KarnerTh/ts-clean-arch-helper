@@ -25,7 +25,7 @@ var objectTemplate = `
 {{- if eq .Type "interface" -}}
 export interface {{ .Name }}{{ $.Suffix }} {
   {{- range .Variables }}
-  {{ .Name }}: {{ .Value }};
+  {{ .Name }}: {{ join .Types " | " }};
   {{- end }}
 }
 {{- else -}}
@@ -117,7 +117,11 @@ func generateObjects(data []analyze.ObjectDetail, suffix SuffixType) (string, er
 	}
 
 	templateData := ObjectTemplateData{Suffix: suffix, Data: preparedData}
-	tmplObject, err := template.New("objectTemplate").Parse(objectTemplate)
+	tmplObject, err := template.New("objectTemplate").Funcs(template.FuncMap{
+		"join": func(s []string, d string) string {
+			return strings.Join(s, d)
+		},
+	}).Parse(objectTemplate)
 	if err != nil {
 		return "", err
 	}
